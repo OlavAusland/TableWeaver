@@ -111,7 +111,7 @@ void pretty_print(table_t* table, int cellWidth)
         divider[i] = '+';
     }
 
-    printf("%s\n", divider);
+    printf("\n%s\n", divider);
 
 
     for(int i = 0; i < table->rows; i++)
