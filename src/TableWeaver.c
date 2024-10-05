@@ -10,7 +10,7 @@ table_t* create_table(int cols, char* header, char delimiter)
 
     for(int i = 0; i < cols; i++)
     {
-        table->entries[i] = calloc(128, sizeof(char));
+        table->entries[i] = calloc(MAX_ENTRY_SIZE, sizeof(char));
     }
 
     table->rows = 1;
@@ -20,7 +20,7 @@ table_t* create_table(int cols, char* header, char delimiter)
     int start = 0;
     int end   = 0;
 
-    while(header[end] != '\0')
+    while(header[end] != '\0' && end < MAX_ENTRY_SIZE)
     {
         if(header[end] == delimiter)
         {
@@ -33,7 +33,6 @@ table_t* create_table(int cols, char* header, char delimiter)
     }
 
     memmove(table->entries[index], header + start, end - start);
-
     return table;
 }
 
@@ -50,7 +49,7 @@ void insert_row(table_t** table, char* header, char delimiter)
     for(int col = 0; col < (*table)->cols; col++)
     {
         int entry = (((*table)->rows - 1) * (*table)->cols + col);
-        (*table)->entries[entry] = calloc(128, sizeof(char));
+        (*table)->entries[entry] = calloc(MAX_ENTRY_SIZE, sizeof(char));
     }
 
     const int baseIndex = ((*table)->rows - 1)* (*table)->cols;
@@ -60,7 +59,7 @@ void insert_row(table_t** table, char* header, char delimiter)
     int end   = 0;
 
     while(header[end] != '\0' && index < baseIndex + (*table)->cols)
-    {
+    {   
         if(header[end] == delimiter)
         {
             memmove((*table)->entries[index++], header + start, end - start);
@@ -79,34 +78,23 @@ char* get_entry(table_t* table, int row, int col)
     return table->entries[(row * table->cols) + col];
 }
 
-void display(table_t* table)
+void display(table_t* table, int cellWidth)
 {
-    for(int i = 0; i < table->rows; i++)
-    {
-        for(int j = 0; j < table->cols; j++)
-        {
-            int entry = (i * table->cols) + j;
-            printf("%s\t\t", table->entries[entry]);
-        }
-        printf("\n");
-    }
-}
+    if(cellWidth < 1){cellWidth = 1;}
 
-void pretty_print(table_t* table, int cellWidth)
-{
     char** overflownBuffer = malloc(sizeof(char*) * table->cols);
 
     for(int j = 0; j < table->cols; j++)
     {
-        overflownBuffer[j] = calloc(128, sizeof(char));
+        overflownBuffer[j] = calloc(MAX_ENTRY_SIZE, sizeof(char));
     }
 
-    char divider[128];
-    memset(divider, 0, 128);
+    char divider[MAX_ENTRY_SIZE];
+    memset(divider, 0, MAX_ENTRY_SIZE);
     memset(divider, '-', cellWidth * table->cols + (table->cols + 1));
 
 
-    for(int i = 0; i <= cellWidth * (table->cols + 1); i += cellWidth + 1)
+    for(int i = 0; i <= cellWidth * (table->cols) + (table->cols + 1); i += cellWidth + 1)
     {
         divider[i] = '+';
     }
@@ -130,15 +118,15 @@ void pretty_print(table_t* table, int cellWidth)
             overflown = false;
             for(int j = 0; j < table->cols; j++)
             {
-                char entry[128];
-                memset(entry, ' ', 128);
+                char entry[MAX_ENTRY_SIZE];
+                memset(entry, ' ', MAX_ENTRY_SIZE);
 
                 int entryLength = strlen(overflownBuffer[j]);
 
                 memcpy(entry, overflownBuffer[j], entryLength);
-                memset(overflownBuffer[j], 0, 128);
+                memset(overflownBuffer[j], 0, MAX_ENTRY_SIZE);
                 
-                entry[127] = 0;
+                entry[MAX_ENTRY_SIZE - 1] = 0;
 
                 if(entryLength > cellWidth)
                 {
@@ -162,13 +150,15 @@ void pretty_print(table_t* table, int cellWidth)
 
         if(i == 0)
         {
-            for(int i = 0; i <= cellWidth * (table->cols + 1); i += cellWidth + 1)
+            for(int i = 0; i <= cellWidth * (table->cols + 2); i += cellWidth + 1)
             {
-                divider[i] = '|';
+                divider[i] = '+';
             }
+            divider[0] = '|';
+            divider[cellWidth * (table->cols) + table->cols] = '|';
         }else if(i == table->rows - 2)
         {
-            for(int i = 0; i <= cellWidth * (table->cols + 1); i += cellWidth + 1)
+            for(int i = 0; i <= cellWidth * (table->cols) + (table->cols + 1); i += cellWidth + 1)
             {
                 divider[i] = '+';
             }

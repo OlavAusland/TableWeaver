@@ -1,8 +1,10 @@
 #include "parser.h"
+#include "TableWeaver.h"
 #include <string.h>
 
 table_t* table_from_csv(char* filePath)
 {
+
     char delimiter = ',';
 
     FILE* file = fopen(filePath, "r");
@@ -11,10 +13,10 @@ table_t* table_from_csv(char* filePath)
     int cols = 1;
 
     int headerIndex = 0;
-    char header[128];
-    memset(header, 0, 128);
+    char header[MAX_ENTRY_SIZE];
+    memset(header, 0, MAX_ENTRY_SIZE);
 
-    while((ch = fgetc(file)) != '\n')
+    while((ch = fgetc(file)) != '\n' && headerIndex < MAX_ENTRY_SIZE)
     {
         if(ch == delimiter){cols++;}
         header[headerIndex++] = ch;
@@ -29,20 +31,19 @@ table_t* table_from_csv(char* filePath)
         return NULL;
     }
 
-    char buffer[128];
-    memset(buffer, 0, 128);
+    char buffer[MAX_ENTRY_SIZE];
+    memset(buffer, 0, MAX_ENTRY_SIZE);
 
     int index = 0;
-    while((ch = fgetc(file)) != EOF)
+    while((ch = fgetc(file)) != EOF && index < MAX_ENTRY_SIZE)
     {
         if(ch == '\n')
         {
             insert_row(&table, buffer, ',');
-            memset(buffer, 0, 128);
+            memset(buffer, 0, MAX_ENTRY_SIZE);
             index = 0;
             continue;
         }
-        printf("%c", ch);
         buffer[index++] = ch;
     }
 
